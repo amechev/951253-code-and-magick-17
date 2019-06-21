@@ -90,6 +90,7 @@ window.dialog = (function () {
   });
 
   return {
+    setup: setup,
     closeDialog: closePopup,
     // openDialog: openPopup
   };
