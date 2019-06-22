@@ -2,6 +2,9 @@
 (function () {
   var util = window.util;
   var dialog = window.dialog;
+  var itemBackpack = window.dialog.setup.querySelector('.setup-artifacts');
+  var itemSlots = itemBackpack.querySelectorAll('.setup-artifacts-cell');
+  var shopItem = window.dialog.setup.querySelector('.star');
 
   var WIZARDS_NAMES = [
     'Иван',
@@ -146,5 +149,52 @@
     setupWizardCoat.style.fill = color;
     inputWizardCoat.value = color;
   });
+
+  var onItemDragStart = function () {
+    itemSlots.forEach(function (item) {
+      item.addEventListener('dragenter', onItemDragEnter, false);
+      item.addEventListener('dragleave', onItemDragLeave, false);
+      item.addEventListener('dragover', onItemDragOver, false);
+      item.addEventListener('drop', onItemDragDrop, false);
+    });
+
+    return true;
+  };
+
+  var onItemDragOver = function (evt) {
+    evt.preventDefault();
+  };
+
+  var onItemDragEnter = function (evt) {
+    evt.target.style.opacity = '0.5';
+    evt.preventDefault();
+    return true;
+  };
+
+  var onItemDragLeave = function (evt) {
+    evt.target.style = '';
+    evt.preventDefault();
+    return true;
+  };
+
+  var onItemDragDrop = function (evt) {
+    evt.target.appendChild(shopItem);
+    evt.target.style = '';
+    evt.stopPropagation();
+    return false;
+  };
+
+  var onItemDragEnd = function () {
+    itemSlots.forEach(function (item) {
+      item.removeEventListener('dragenter', onItemDragEnter, false);
+      item.removeEventListener('dragleave', onItemDragLeave, false);
+      item.removeEventListener('dragover', onItemDragOver, false);
+      item.removeEventListener('drop', onItemDragDrop, false);
+    });
+    shopItem.removeEventListener('dragend', onItemDragEnd, false);
+  };
+
+  shopItem.addEventListener('dragstart', onItemDragStart, false);
+  shopItem.addEventListener('dragend', onItemDragEnd, false);
 
 })();
