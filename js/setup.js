@@ -2,31 +2,22 @@
 (function () {
   var util = window.util;
   var dialog = window.dialog;
+  var backend = window.backend;
   var itemBackpack = window.dialog.setup.querySelector('.setup-artifacts');
   var itemSlots = itemBackpack.querySelectorAll('.setup-artifacts-cell');
   var shopItem = window.dialog.setup.querySelector('.star');
-
-  var WIZARDS_NAMES = [
-    'Иван',
-    'Хуан Себастьян',
-    'Мария',
-    'Кристоф',
-    'Виктор',
-    'Юлия',
-    'Люпита',
-    'Вашингтон'
-  ];
-
-  var WIZARDS_SURNAMES = [
-    'да Марья',
-    'Верон',
-    'Мирабелла',
-    'Вальц',
-    'Онопко',
-    'Топольницкая',
-    'Нионго',
-    'Ирвинг',
-  ];
+  var setup = document.querySelector('.setup');
+  var setupInputName = setup.querySelector('.setup-user-name');
+  var setupWizardCoat = setup.querySelector('.wizard-coat');
+  var inputWizardCoat = setup.querySelector('input[name="coat-color"]');
+  var setupWizardEyes = setup.querySelector('.wizard-eyes');
+  var inputWizardEyes = setup.querySelector('input[name="eyes-color"]');
+  var setupFireBallWrap = setup.querySelector('.setup-fireball-wrap');
+  var inputFireBallColor = setup.querySelector('input[name="fireball-color"]');
+  var WIZARDS_CNT = 4;
+  var WIZARDS_GET_URL = 'https://js.dump.academy/code-and-magick/data';
+  var WIZARD_SAVE_URL = 'https://js.dump.academy/code-and-magick';
+  var form = window.dialog.setup.querySelector('.setup-wizard-form');
 
   var COAT_COLORS = [
     'rgb(101, 137, 164)',
@@ -53,14 +44,6 @@
     '#e6e848'
   ];
 
-  var WIZARDS_CNT = 4;
-
-  var generateName = function () {
-    var name = WIZARDS_NAMES[Math.floor(Math.random() * (WIZARDS_NAMES.length))];
-    var surname = WIZARDS_SURNAMES[Math.floor(Math.random() * (WIZARDS_SURNAMES.length))];
-    return name + ' ' + surname;
-  };
-
   var generateFireBallsColor = function () {
     return FIREBALLS_COLORS[Math.floor(Math.random() * (FIREBALLS_COLORS.length))];
   };
@@ -73,55 +56,51 @@
     return EYES_COLORS[Math.floor(Math.random() * (EYES_COLORS.length))];
   };
 
-  var renderWizard = function () {
-    var wizardElement = similarWizardTemplate.cloneNode(true);
-    wizardElement.querySelector('.setup-similar-label').textContent = generateName();
-    wizardElement.querySelector('.wizard-coat').style.fill = generateCoatColor();
-    wizardElement.querySelector('.wizard-eyes').style.fill = generateEyesColor();
-    similarListElement.appendChild(wizardElement);
-
-    return wizardElement;
-  };
-
-  var buildFragment = function () {
-    var fragment = document.createDocumentFragment();
-    for (var i = 0; i < WIZARDS_CNT; i++) {
-      fragment.appendChild(renderWizard());
-    }
-
-    return fragment;
-  };
-
+  var similarList = window.dialog.setup.querySelector('.setup-similar');
   var similarListElement = document.querySelector('.setup-similar-list');
   var similarWizardTemplate = document.querySelector('#similar-wizard-template')
     .content
     .querySelector('.setup-similar-item');
 
-  var fragment = buildFragment();
-  similarListElement.appendChild(fragment);
+  var renderWizard = function (wizard) {
+    var wizardElement = similarWizardTemplate.cloneNode(true);
+    wizardElement.querySelector('.wizard-eyes').style.fill = wizard.colorEyes;
+    wizardElement.querySelector('.setup-similar-label').textContent = wizard.name;
+    wizardElement.querySelector('.wizard-coat').style.fill = wizard.colorCoat;
 
-  document.querySelector('.setup-similar').classList.remove('hidden');
+    return wizardElement;
+  };
 
-  var setup = document.querySelector('.setup');
-  var elementSetupSubmit = setup.querySelector('.setup-submit');
-  var setupInputName = setup.querySelector('.setup-user-name');
-  var setupWizardCoat = setup.querySelector('.wizard-coat');
-  var inputWizardCoat = setup.querySelector('input[name="coat-color"]');
-  var setupWizardEyes = setup.querySelector('.wizard-eyes');
-  var inputWizardEyes = setup.querySelector('input[name="eyes-color"]');
-  var setupFireBallWrap = setup.querySelector('.setup-fireball-wrap');
-  var inputFireBallColor = setup.querySelector('input[name="fireball-color"]');
-
-  var submitSetup = function () {
+  var onSuccessSave = function () {
     dialog.closeDialog();
   };
 
-  elementSetupSubmit.addEventListener('click', function () {
-    submitSetup();
-  });
+  var successHandler = function (wizards) {
+    var fragment = document.createDocumentFragment();
 
-  elementSetupSubmit.addEventListener('keydown', function (evt) {
-    util.isEnterEvent(evt, submitSetup());
+    for (var i = 0; i < WIZARDS_CNT; i++) {
+      fragment.appendChild(renderWizard(wizards[Math.floor(Math.random() * (wizards.length - 1) + 1)]));
+    }
+    similarListElement.appendChild(fragment);
+    similarList.classList.remove('hidden');
+  };
+
+  var errorHandler = function (errorMessage) {
+    var node = document.createElement('div');
+    node.style = 'z-index: 100; margin: 0 auto; text-align: center; background-color: tomato;';
+    node.style.position = 'absolute';
+    node.style.left = 0;
+    node.style.right = 0;
+    node.style.fontSize = '30px';
+
+    node.textContent = errorMessage;
+    document.body.insertAdjacentElement('afterbegin', node);
+  };
+
+  backend.load(WIZARDS_GET_URL, successHandler, errorHandler);
+  form.addEventListener('submit', function (evt) {
+    backend.save(WIZARD_SAVE_URL, new FormData(form), onSuccessSave, errorHandler);
+    evt.preventDefault();
   });
 
   setupInputName.addEventListener('focus', function () {
